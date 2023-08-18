@@ -1,0 +1,10 @@
+{
+  "Run tests": "运行测试",
+  "Specific test configuration (default: phpunit.xml)": "指定测试配置（默认：phpunit.xml）",
+  "Specific output printer driver to be used": "指定要使用的输出打印驱动",
+  "Enable debug output": "开启调试输出",
+  "PHPUnit beyond version 10.x is not tested": "PHPUnit 10.x之后的版本未经测试",
+  "PHPUnit executable not found": "找不到PHPUnit的执行文件",
+  "configuration file not found": "找不到配置文件",
+  "": ""
+}

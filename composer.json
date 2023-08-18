@@ -1,0 +1,34 @@
+{
+  "name": "xirelogy/magpie-testbench",
+  "description": "Magpie testing workbench",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "JingXiang Tou",
+      "email": "jx@tou.st"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.1",
+    "phpunit/phpunit": "^10.0",
+    "xirelogy/magpie-core": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "MagpieLib\\TestBench\\": "src"
+    },
+    "files": [
+      "src/System/Adapters/autoload.php"
+    ]
+  },
+  "extra": {
+    "magpie": {
+      "classes": [
+        "MagpieLib\\TestBench\\System\\TestSetup"
+      ]
+    }
+  }
+}

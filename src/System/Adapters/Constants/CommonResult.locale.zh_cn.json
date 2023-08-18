@@ -1,0 +1,11 @@
+{
+  "passed": "成功",
+  "failed": "失败",
+  "risky": "有风险",
+  "incomplete": "不完整",
+  "skipped": "跳过",
+  "deprecated": "已弃用",
+  "warning": "警告",
+  "notice": "通告",
+  "": ""
+}
