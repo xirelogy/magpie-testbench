@@ -3,6 +3,8 @@
 namespace MagpieLib\TestBench\Testing;
 
 use DateTimeInterface;
+use MagpieLib\TestBench\Http\Defaults\DefaultMockHttpClient;
+use MagpieLib\TestBench\Http\MockHttpClient;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 
 /**
@@ -20,5 +22,15 @@ abstract class TestCase extends PhpUnitTestCase
     protected function assertTimeEquals(?DateTimeInterface $expected, ?DateTimeInterface $actual, string $message = '') : void
     {
         $this->assertEquals($expected?->getTimestamp(), $actual?->getTimestamp(), $message);
+    }
+
+
+    /**
+     * Access to an HTTP client that can simulate local request
+     * @return MockHttpClient
+     */
+    protected function getHttpClient() : MockHttpClient
+    {
+        return DefaultMockHttpClient::create();
     }
 }
