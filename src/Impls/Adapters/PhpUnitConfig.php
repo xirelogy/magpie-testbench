@@ -31,15 +31,60 @@ class PhpUnitConfig
      */
     public const ENV_NAME_RUNNING = 'MAGPIE_TESTBENCH_RUNNING';
     /**
+     * Environment name for project root path
+     */
+    public const ENV_NAME_ROOT = 'MAGPIE_TESTBENCH_ROOT';
+    /**
      * Environment name for printer instance to be used
      */
     public const ENV_NAME_PRINTER = 'MAGPIE_TESTBENCH_PRINTER';
+
+    /**
+     * @var string|null Registered root path
+     */
+    public static ?string $rootPath = null;
+
+
+    /**
+     * Autoload from PHPUnit
+     * @return void
+     */
+    public static function autoloadFromPhpUnit() : void
+    {
+        // Do not proceed without the server variable
+        $envRunning = $_SERVER[static::ENV_NAME_RUNNING] ?? null;
+        if ($envRunning !== 'true') return;
+
+        // Register root path if found
+        $rootPath = $_SERVER[static::ENV_NAME_ROOT] ?? null;
+        if ($rootPath !== null) static::$rootPath = $rootPath;
+
+        Excepts::noThrow(function () {
+            static::autoloadProject();
+        });
+    }
+
+
+    /**
+     * Ensure autoload is completed in relation to the project
+     * @return void
+     */
+    protected static function autoloadProject() : void
+    {
+        if (static::$rootPath === null) return;
+
+        $autoloadFilename = @realpath(static::$rootPath . '/vendor/autoload.php');
+        if ($autoloadFilename === false) return;
+        if (!file_exists($autoloadFilename)) return;
+        if (!is_file($autoloadFilename)) return;
+
+        require $autoloadFilename;
+    }
 
 
     /**
      * Boot up from PHPUnit
      * @return void
-     * @internal
      */
     public static function bootFromPhpUnit() : void
     {
@@ -64,9 +109,12 @@ class PhpUnitConfig
     {
         if (Kernel::hasCurrent()) return;
 
-        // Locate the configuration by moving upwards
+        // Locate the configuration
         $bootConfigPath = static::findBootConfig();
-        if ($bootConfigPath === null) return;
+        if ($bootConfigPath === null) {
+            static::lowLevelWarning('Cannot resolve boot config file');
+            return;
+        }
         $config = require_once $bootConfigPath;
 
         // Determine the actual project root path and boot up the kernel
@@ -95,11 +143,27 @@ class PhpUnitConfig
      */
     protected static function findBootConfig() : ?string
     {
+        // If project directory is provided, use the project directory
+        if (static::$rootPath !== null) {
+            $projectBootPath = static::$rootPath . '/boot/test-config.php';
+            if (file_exists($projectBootPath) && is_file($projectBootPath)) return $projectBootPath;
+
+            $projectBootPath = static::$rootPath . '/boot/config.php';
+            if (file_exists($projectBootPath) && is_file($projectBootPath)) return $projectBootPath;
+
+            // Do not look further
+            return null;
+        }
+
+        // Fallback by looking upwards
         $currentDir = realpath(__DIR__);
         while (true) {
             $currentDir = dirname($currentDir);
-            $currentPath = $currentDir . '/boot/config.php';
 
+            $currentPath = $currentDir . '/boot/test-config.php';
+            if (file_exists($currentPath) && is_file($currentPath)) return $currentPath;
+
+            $currentPath = $currentDir . '/boot/config.php';
             if (file_exists($currentPath) && is_file($currentPath)) return $currentPath;
 
             if ($currentDir === '' || $currentDir === '/') return null;
@@ -133,5 +197,20 @@ class PhpUnitConfig
     {
         $phpUnitVersion = NumericVersion::parse(PhpUnitVersion::id());
         return $phpUnitVersion->getMajor();
+    }
+
+
+    /**
+     * Write low-level warning messages (assuming no proper context is available)
+     * @param string $message
+     * @return void
+     */
+    protected static function lowLevelWarning(string $message) : void
+    {
+        $message = str_replace("\r", "", $message);
+        $messageLines = explode("\n", $message);
+        foreach ($messageLines as $messageLine) {
+            echo "WARNING! $messageLine\n";
+        }
     }
 }

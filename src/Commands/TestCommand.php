@@ -21,8 +21,9 @@ use Magpie\System\Process\Process;
 use Magpie\System\Process\ProcessCommandLine;
 use MagpieLib\TestBench\Impls\Adapters\PhpUnitConfig;
 
-#[CommandSignature('test {--config=} {--printer=} {--debug}')]
+#[CommandSignature('test {--root=} {--config=} {--printer=} {--debug}')]
 #[CommandDescriptionL('Run tests')]
+#[CommandOptionDescriptionL('root', 'Specific project root directory (default: current working directory)')]
 #[CommandOptionDescriptionL('config', 'Specific test configuration (default: phpunit.xml)')]
 #[CommandOptionDescriptionL('printer', 'Specific output printer driver to be used')]
 #[CommandOptionDescriptionL('debug', 'Enable debug output')]
@@ -50,17 +51,35 @@ class TestCommand extends Command
         $arguments[] = '--no-output';
         $arguments[] = '--do-not-cache-result';
 
+        // Check the specific root path
+        $rootPath = $request->options->optional('root', static::createRootDirectoryParser());
+        if ($rootPath === null) {
+            $cwd = getcwd();
+            if ($cwd === false) {
+                Console::error(_l('Cannot determine current working directory'));
+                return;
+            }
+            $rootPath = $cwd;
+        }
+
         // Use the specific configuration
-        $configFile = $request->options->optional('config', static::createPhpUnitConfigParser(), static::DEFAULT_CONFIG_FILENAME);
+        $configFile = $request->options->optional('config', static::createPhpUnitConfigParser($rootPath), static::DEFAULT_CONFIG_FILENAME);
         $arguments[] = '--configuration=' . $configFile;
 
         if ($request->options->safeOptional('debug')) {
             $arguments[] = '--log-events-verbose-text=php://stdout';
         }
 
+        // Specify bootstrap path
+        $bootFile = realpath(__DIR__ . '/../System/Adapters/boot.php');
+        if (file_exists($bootFile)) {
+            $arguments[] = '--bootstrap=' . $bootFile;
+        }
+
         // Configure environment variables
         $env = [
             PhpUnitConfig::ENV_NAME_RUNNING => 'true',
+            PhpUnitConfig::ENV_NAME_ROOT => $rootPath,
             'LANG' => I18n::getCurrentLocale(),
         ];
 
@@ -101,24 +120,41 @@ class TestCommand extends Command
 
 
     /**
-     * Parse for the PHPUnit configuration
+     * Parse for project root directory
      * @return Parser
      */
-    protected static function createPhpUnitConfigParser() : Parser
+    protected static function createRootDirectoryParser() : Parser
     {
         return ClosureParser::create(function (mixed $value, ?string $hintName) : string {
             $value = StringParser::create()->parse($value, $hintName);
             $fs = LocalFileSystem::initializeFromWorkDir();
 
+            if ($fs->isDirectoryExist($value)) return $fs->getRealPath($value);
+            throw new ParseFailedException(_l('directory not found'));
+        });
+    }
+
+
+    /**
+     * Parse for the PHPUnit configuration
+     * @param string $rootPath Project root path
+     * @return Parser
+     */
+    protected static function createPhpUnitConfigParser(string $rootPath) : Parser
+    {
+        return ClosureParser::create(function (mixed $value, ?string $hintName) use ($rootPath) : string {
+            $value = StringParser::create()->parse($value, $hintName);
+            $fs = LocalFileSystem::initializeFromSpecificDir($rootPath);
+
             if ($fs->isFileExist($value)) {
-                return $value;
+                return $fs->getRealPath($value);
             }
 
             // Try to resolve for a directory having 'phpunit.xml'
             $otherValue = $value;
             if (!str_ends_with($otherValue, '/')) $otherValue .= '/';
             if ($fs->isFileExist($otherValue . static::DEFAULT_CONFIG_FILENAME)) {
-                return $otherValue . static::DEFAULT_CONFIG_FILENAME;
+                return $fs->getRealPath($otherValue . static::DEFAULT_CONFIG_FILENAME);
             }
 
             throw new ParseFailedException(_l('configuration file not found'));
