@@ -13,6 +13,7 @@ use Magpie\Facades\Http\HttpClientResponse;
 use Magpie\General\Contexts\ScopedCollection;
 use Magpie\General\Names\CommonHttpHeader;
 use Magpie\HttpServer\Concepts\Renderable;
+use Magpie\HttpServer\Exceptions\HttpResponseException;
 use Magpie\HttpServer\Request;
 use Magpie\Objects\Uri;
 use Magpie\Routes\RouteRegistry;
@@ -222,10 +223,15 @@ abstract class MockHttpClientPendingRequest extends HttpClientPendingRequest
     {
         $appConfig = Kernel::current()->getConfig();
 
-        /** @noinspection PhpInternalEntityUsedInspection */
-        $routeDomain = RouteRegistry::_route($hostname, $request);
+        try {
+            /** @noinspection PhpInternalEntityUsedInspection */
+            $routeDomain = RouteRegistry::_route($hostname, $request);
 
-        return RouteRun::create($appConfig)->run($routeDomain, $request);
+            return RouteRun::create($appConfig)->run($routeDomain, $request);
+        } catch (HttpResponseException $ex) {
+            // HTTP response exception handled explicitly
+            return $appConfig->getHttpResponseExceptionRenderer()->createExceptionRenderer($ex);
+        }
     }
 
 
