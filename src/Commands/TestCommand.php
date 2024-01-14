@@ -19,7 +19,7 @@ use Magpie\General\Sugars\Excepts;
 use Magpie\Locales\I18n;
 use Magpie\System\Process\Process;
 use Magpie\System\Process\ProcessCommandLine;
-use MagpieLib\TestBench\Impls\Adapters\PhpUnitConfig;
+use MagpieLib\TestBench\System\Adapters\Impls\PhpUnitConfig;
 
 #[CommandSignature('test {--root=} {--config=} {--printer=} {--debug}')]
 #[CommandDescriptionL('Run tests')]

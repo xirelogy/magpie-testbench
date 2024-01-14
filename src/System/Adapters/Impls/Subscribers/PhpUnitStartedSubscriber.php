@@ -1,13 +1,13 @@
 <?php
 
-namespace MagpieLib\TestBench\Impls\Adapters\Subscribers;
+namespace MagpieLib\TestBench\System\Adapters\Impls\Subscribers;
 
 use Magpie\Exceptions\SafetyCommonException;
 use Magpie\Exceptions\UnsupportedValueException;
 use Magpie\Facades\Console;
 use Magpie\HttpServer\ServerCollection;
 use Magpie\System\Kernel\ExceptionHandler;
-use MagpieLib\TestBench\Impls\Adapters\PhpUnitConfig;
+use MagpieLib\TestBench\System\Adapters\Impls\PhpUnitConfig;
 use MagpieLib\TestBench\System\Adapters\Printers\AliasedPrinters;
 use MagpieLib\TestBench\System\Adapters\Printers\DefaultPrinter;
 use MagpieLib\TestBench\System\Adapters\Printers\Printable;

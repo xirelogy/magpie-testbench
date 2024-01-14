@@ -1,6 +1,6 @@
 <?php
 
-namespace MagpieLib\TestBench\Impls\Adapters;
+namespace MagpieLib\TestBench\System\Adapters\Impls;
 
 use Magpie\Codecs\Parsers\StringParser;
 use Magpie\Configurations\Env;
@@ -14,8 +14,8 @@ use Magpie\HttpServer\ServerCollection;
 use Magpie\Locales\I18n;
 use Magpie\Objects\NumericVersion;
 use Magpie\System\Kernel\Kernel;
-use MagpieLib\TestBench\Impls\Adapters\Subscribers\PhpUnitStartedSubscriber;
 use MagpieLib\TestBench\System\Adapters\Constants\ExtraConsoleStyle;
+use MagpieLib\TestBench\System\Adapters\Impls\Subscribers\PhpUnitStartedSubscriber;
 use PHPUnit\Runner\Version as PhpUnitVersion;
 
 /**

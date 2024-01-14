@@ -1,6 +1,6 @@
 <?php
 
-namespace MagpieLib\TestBench\Impls\Adapters\Subscribers;
+namespace MagpieLib\TestBench\System\Adapters\Impls\Subscribers;
 
 use MagpieLib\TestBench\System\Adapters\Printers\Printable;
 
