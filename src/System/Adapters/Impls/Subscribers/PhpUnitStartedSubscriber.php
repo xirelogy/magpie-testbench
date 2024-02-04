@@ -8,10 +8,13 @@ use Magpie\Facades\Console;
 use Magpie\HttpServer\ServerCollection;
 use Magpie\System\Kernel\ExceptionHandler;
 use MagpieLib\TestBench\System\Adapters\Impls\PhpUnitConfig;
+use MagpieLib\TestBench\System\Adapters\Impls\TestEnvironmentHost;
 use MagpieLib\TestBench\System\Adapters\Printers\AliasedPrinters;
 use MagpieLib\TestBench\System\Adapters\Printers\DefaultPrinter;
 use MagpieLib\TestBench\System\Adapters\Printers\Printable;
 use MagpieLib\TestBench\System\Adapters\Printers\Printer;
+use PHPUnit\Event\Application\Finished as PhpUnitEventApplicationFinished;
+use PHPUnit\Event\Application\FinishedSubscriber as PhpUnitEventApplicationFinishedSubscriber;
 use PHPUnit\Event\Application\Started as PhpUnitEventApplicationStarted;
 use PHPUnit\Event\Application\StartedSubscriber as PhpUnitEventApplicationStartedSubscriber;
 use PHPUnit\Event\Facade as PhpUnitEventFacade;
@@ -99,6 +102,7 @@ final class PhpUnitStartedSubscriber implements PhpUnitEventApplicationStartedSu
 
             $subscribers = $this->createSubscribers($printer);
             PhpUnitEventFacade::instance()->registerSubscribers(...$subscribers);
+            TestEnvironmentHost::initialize();
         } catch (Throwable $ex) {
             Console::error($ex->getMessage());
             ExceptionHandler::systemCritical($ex);
@@ -113,6 +117,14 @@ final class PhpUnitStartedSubscriber implements PhpUnitEventApplicationStartedSu
      */
     protected function createSubscribers(Printable $printer) : iterable
     {
+        // Application shutdown
+        yield new class() implements PhpUnitEventApplicationFinishedSubscriber {
+            public function notify(PhpUnitEventApplicationFinished $event) : void
+            {
+                TestEnvironmentHost::instance()?->release();
+            }
+        };
+
         // Test runner events
         yield new class($printer) extends PrinterAttachedSubscriber implements PhpUnitEventTestRunnerConfiguredSubscriber {
             public function notify(PhpUnitEventTestRunnerConfigured $event) : void
