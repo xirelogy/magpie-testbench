@@ -134,13 +134,14 @@ final class TestEnvironmentHost implements Releasable
 
     /**
      * Initialize the instance
+     * @param TestEnvironmentConfiguration|null $testConfig
      * @return static
      */
-    public static function initialize() : static
+    public static function initialize(?TestEnvironmentConfiguration $testConfig = null) : static
     {
         if (static::$instance !== null) ExceptionHandler::systemCritical('Multiple initialization of test environment');
 
-        $testConfig = static::getTestEnvironmentConfig();
+        $testConfig = $testConfig ?? static::getTestEnvironmentConfig();
 
         static::$instance = new static($testConfig);
         static::$instance->runInit();
@@ -163,7 +164,7 @@ final class TestEnvironmentHost implements Releasable
      * Access to the test environment configuration
      * @return TestEnvironmentConfiguration
      */
-    protected static function getTestEnvironmentConfig() : TestEnvironmentConfiguration
+    public static function getTestEnvironmentConfig() : TestEnvironmentConfiguration
     {
         // When available via app config, return from there
         $appConfig = Kernel::current()->getConfig();

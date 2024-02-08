@@ -21,6 +21,16 @@ abstract class TestEnvironmentConfiguration
 
 
     /**
+     * If test events is sent to log
+     * @return bool
+     */
+    public function isLogTestEvents() : bool
+    {
+        return true;
+    }
+
+
+    /**
      * All preparations for the test environment
      * @return iterable<TestEnvironmentPreparable>
      */

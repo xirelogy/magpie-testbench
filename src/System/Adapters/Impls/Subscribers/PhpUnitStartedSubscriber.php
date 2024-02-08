@@ -5,12 +5,15 @@ namespace MagpieLib\TestBench\System\Adapters\Impls\Subscribers;
 use Magpie\Exceptions\SafetyCommonException;
 use Magpie\Exceptions\UnsupportedValueException;
 use Magpie\Facades\Console;
+use Magpie\Facades\Log;
 use Magpie\HttpServer\ServerCollection;
 use Magpie\System\Kernel\ExceptionHandler;
+use MagpieLib\TestBench\System\Adapters\Impls\LoggerPrinter;
 use MagpieLib\TestBench\System\Adapters\Impls\PhpUnitConfig;
 use MagpieLib\TestBench\System\Adapters\Impls\TestEnvironmentHost;
 use MagpieLib\TestBench\System\Adapters\Printers\AliasedPrinters;
 use MagpieLib\TestBench\System\Adapters\Printers\DefaultPrinter;
+use MagpieLib\TestBench\System\Adapters\Printers\ForwardingPrinter;
 use MagpieLib\TestBench\System\Adapters\Printers\Printable;
 use MagpieLib\TestBench\System\Adapters\Printers\Printer;
 use PHPUnit\Event\Application\Finished as PhpUnitEventApplicationFinished;
@@ -98,11 +101,24 @@ final class PhpUnitStartedSubscriber implements PhpUnitEventApplicationStartedSu
     public function notify(PhpUnitEventApplicationStarted $event) : void
     {
         try {
+            $testConfig = TestEnvironmentHost::getTestEnvironmentConfig();
+
             $printer = $this->createPrinter();
 
-            $subscribers = $this->createSubscribers($printer);
+            if ($testConfig->isLogTestEvents()) {
+                // Logging of test events required, use a forwarding printer to split events
+                $forwarder = ForwardingPrinter::create([
+                    new LoggerPrinter(Log::split('test-events')),
+                    $printer,
+                ]);
+                $subscribers = $this->createSubscribers($forwarder);
+            } else {
+                // Subscribe directly to the target printer
+                $subscribers = $this->createSubscribers($printer);
+            }
+
             PhpUnitEventFacade::instance()->registerSubscribers(...$subscribers);
-            TestEnvironmentHost::initialize();
+            TestEnvironmentHost::initialize($testConfig);
         } catch (Throwable $ex) {
             Console::error($ex->getMessage());
             ExceptionHandler::systemCritical($ex);
