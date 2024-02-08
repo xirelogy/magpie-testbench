@@ -13,11 +13,13 @@ use Magpie\General\Traits\StaticClass;
 use Magpie\HttpServer\ServerCollection;
 use Magpie\Locales\I18n;
 use Magpie\Objects\NumericVersion;
+use Magpie\Queues\HostedQueueRun;
 use Magpie\System\Kernel\ConsoleAbnormalExitHandle;
 use Magpie\System\Kernel\ExceptionHandler;
 use Magpie\System\Kernel\Kernel;
 use MagpieLib\TestBench\System\Adapters\Constants\ExtraConsoleStyle;
 use MagpieLib\TestBench\System\Adapters\Impls\Subscribers\PhpUnitStartedSubscriber;
+use MagpieLib\TestBench\System\Adapters\Queues\BaseTestQueueRunnable;
 use PHPUnit\Runner\Version as PhpUnitVersion;
 
 /**
@@ -45,6 +47,41 @@ class PhpUnitConfig
      * @var string|null Registered root path
      */
     public static ?string $rootPath = null;
+    /**
+     * @var string|null Saved autoload (vendor) filename
+     */
+    protected static ?string $autoloadFilename = null;
+    /**
+     * @var string|null Saved config filename
+     */
+    protected static ?string $bootConfigPath = null;
+
+
+    /**
+     * Create a hosted queue run for the test environment
+     * @param BaseTestQueueRunnable $target
+     * @return HostedQueueRun
+     */
+    public static function createHostedQueueRun(BaseTestQueueRunnable $target) : HostedQueueRun
+    {
+        $ret = HostedQueueRun::create($target);
+
+        if (static::$rootPath !== null) {
+            $ret->withRootPath(static::$rootPath);
+        }
+
+        if (static::$autoloadFilename !== null) {
+            $ret->withVendorAutoloadPath(static::$autoloadFilename);
+        }
+
+        if (static::$bootConfigPath !== null) {
+            $ret->withAppConfigPath(static::$bootConfigPath);
+        }
+
+        $ret->withUseEnv('.env.testing');
+
+        return $ret;
+    }
 
 
     /**
@@ -79,6 +116,8 @@ class PhpUnitConfig
         if ($autoloadFilename === false) return;
         if (!file_exists($autoloadFilename)) return;
         if (!is_file($autoloadFilename)) return;
+
+        static::$autoloadFilename = $autoloadFilename;
 
         require $autoloadFilename;
     }
@@ -117,6 +156,7 @@ class PhpUnitConfig
             static::lowLevelWarning('Cannot resolve boot config file');
             return;
         }
+        static::$bootConfigPath = $bootConfigPath;
         $config = require_once $bootConfigPath;
 
         // Determine the actual project root path and boot up the kernel

@@ -133,6 +133,28 @@ final class TestEnvironmentHost implements Releasable
 
 
     /**
+     * Re-import exported environment
+     * @param TestEnvironmentExported $exported
+     * @return $this
+     */
+    private function import(TestEnvironmentExported $exported) : static
+    {
+        $this->hasArtifactsDirectory = $exported->hasArtifactsDirectory;
+        return $this;
+    }
+
+
+    /**
+     * Export the current host into environment
+     * @return TestEnvironmentExported
+     */
+    public function export() : TestEnvironmentExported
+    {
+        return new TestEnvironmentExported($this->hasArtifactsDirectory);
+    }
+
+
+    /**
      * Initialize the instance
      * @param TestEnvironmentConfiguration|null $testConfig
      * @return static
@@ -147,6 +169,22 @@ final class TestEnvironmentHost implements Releasable
         static::$instance->runInit();
 
         return static::$instance;
+    }
+
+
+    /**
+     * Reinitialize the instance
+     * @param TestEnvironmentExported $exported
+     * @return static
+     */
+    public static function reinitialize(TestEnvironmentExported $exported) : static
+    {
+        if (static::$instance === null) {
+            $testConfig = static::getTestEnvironmentConfig();
+            static::$instance = new static($testConfig);
+        }
+
+        return static::$instance->import($exported);
     }
 
 
