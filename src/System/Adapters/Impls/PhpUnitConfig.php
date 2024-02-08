@@ -13,6 +13,8 @@ use Magpie\General\Traits\StaticClass;
 use Magpie\HttpServer\ServerCollection;
 use Magpie\Locales\I18n;
 use Magpie\Objects\NumericVersion;
+use Magpie\System\Kernel\ConsoleAbnormalExitHandle;
+use Magpie\System\Kernel\ExceptionHandler;
 use Magpie\System\Kernel\Kernel;
 use MagpieLib\TestBench\System\Adapters\Constants\ExtraConsoleStyle;
 use MagpieLib\TestBench\System\Adapters\Impls\Subscribers\PhpUnitStartedSubscriber;
@@ -134,6 +136,9 @@ class PhpUnitConfig
 
         // Register the default console
         $kernel->registerProvider(Consolable::class, $kernel->getConfig()->createDefaultConsolable($customFn));
+
+        // Update the default exception handler
+        ExceptionHandler::handleAbnormalExitUsing(new ConsoleAbnormalExitHandle());
     }
 
 
