@@ -10,6 +10,7 @@ use Magpie\Facades\Http\Bodies\HttpSimpleClientResponseBody;
 use Magpie\Facades\Http\HttpClientResponse;
 use Magpie\Facades\Http\HttpClientResponseBody;
 use Magpie\General\Contexts\Scoped;
+use Magpie\General\Names\CommonHttpStatusCode;
 use Magpie\HttpServer\OutputBufferCapture;
 use Magpie\HttpServer\Concepts\Renderable;
 use Magpie\HttpServer\Request;
@@ -68,7 +69,7 @@ abstract class MockHttpClientResponseListener
         $bodyContent = $this->captureResponse();
         $body = HttpSimpleClientResponseBody::fromContent($bodyContent);
 
-        $httpStatusCode = $this->httpStatusCode ?? 200;
+        $httpStatusCode = $this->httpStatusCode ?? CommonHttpStatusCode::OK;
         $headerLines = $this->flattenHeaderLines();
 
         return $this->createActualResponse($scheme, $httpVersion, $httpStatusCode, $headerLines, $body);
