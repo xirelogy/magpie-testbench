@@ -1,13 +1,13 @@
 {
-  "Run tests": "運行測試",
-  "Specific project root directory (default: current working directory)": "指定項目主目錄（默認：當前目錄）",
-  "Specific test configuration (default: phpunit.xml)": "指定測試配置（默認：phpunit.xml）",
-  "Specific output printer driver to be used": "指定要使用的輸出打印驅動",
+  "Run tests": "執行測試",
+  "Specific project root directory (default: current working directory)": "指定專案主目錄（預設：當前目錄）",
+  "Specific test configuration (default: phpunit.xml)": "指定測試配置（預設：phpunit.xml）",
+  "Specific output printer driver to be used": "指定要使用的輸出列印驅動",
   "Enable debug output": "開啓調試輸出",
   "PHPUnit beyond version 10.x is not tested": "PHPUnit 10.x之後的版本未經測試",
-  "PHPUnit executable not found": "找不到PHPUnit的執行文件",
+  "PHPUnit executable not found": "找不到PHPUnit的執行檔案",
   "Cannot determine current working directory": "無法獲得當前目錄",
   "directory not found": "找不到目錄",
-  "configuration file not found": "找不到配置文件",
+  "configuration file not found": "找不到配置檔案",
   "": ""
 }

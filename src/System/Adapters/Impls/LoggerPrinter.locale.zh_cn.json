@@ -9,7 +9,7 @@
   "Test suite {{0}} finished": "结束{{0}}测试套件",
   "Test preparation started": "开始测试准备",
   "[Test {{0}}] ### Test preparation started": "[{{0}}测试] ### 开始测试准备",
-  "Test finished": "结束测试",
+  "Test finished": "测试结束",
   "[Test {{0}}] ### Test finished": "[{{0}}测试] ### 测试结束",
   "Test {{0}} finished": "{{0}}",
   "[Runner] Deprecation triggered": "[执行器] 触发弃用",

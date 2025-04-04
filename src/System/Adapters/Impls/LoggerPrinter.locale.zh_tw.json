@@ -9,7 +9,7 @@
   "Test suite {{0}} finished": "結束{{0}}測試套件",
   "Test preparation started": "開始測試准備",
   "[Test {{0}}] ### Test preparation started": "[{{0}}測試] ### 開始測試准備",
-  "Test finished": "結束測試",
+  "Test finished": "測試結束",
   "[Test {{0}}] ### Test finished": "[{{0}}測試] ### 測試結束",
   "[Runner] Deprecation triggered": "[執行器] 觸發棄用",
   "[Runner] Deprecation triggered: {{0}}": "[執行器] 觸發棄用：{{0}}",
