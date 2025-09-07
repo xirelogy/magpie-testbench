@@ -1,0 +1,7 @@
+{
+  "Started queue listener in separated process": "已在另一个进程中启动队列监听器",
+  "Sending restart/terminate signal to queue...": "正在向队列发送重启/终止信号",
+  "Queue listener process exit": "队列监听器进程已退出",
+  "Queue listener process exit with code: {{0}}": "队列监听器进程已退出，代码：{{0}}",
+  "": ""
+}
