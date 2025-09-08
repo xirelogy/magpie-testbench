@@ -12,9 +12,12 @@ use Magpie\Facades\Http\HttpClientRequestOption;
 use Magpie\Facades\Http\HttpClientResponse;
 use Magpie\General\Contexts\ScopedCollection;
 use Magpie\General\Names\CommonHttpHeader;
+use Magpie\General\Str;
+use Magpie\General\Sugars\Quote;
 use Magpie\HttpServer\Concepts\Renderable;
 use Magpie\HttpServer\Exceptions\HttpResponseException;
 use Magpie\HttpServer\Request;
+use Magpie\Logs\Concepts\Loggable;
 use Magpie\Objects\Uri;
 use Magpie\Routes\RouteRegistry;
 use Magpie\Routes\RouteRun;
@@ -39,6 +42,10 @@ abstract class MockHttpClientPendingRequest extends HttpClientPendingRequest
      * @var string Request URL (path)
      */
     protected string $path;
+    /**
+     * @var Loggable|null Logger instance
+     */
+    protected ?Loggable $logger;
 
 
     /**
@@ -48,15 +55,17 @@ abstract class MockHttpClientPendingRequest extends HttpClientPendingRequest
      * @param string $path
      * @param array<string, mixed> $parentHeaders
      * @param array<HttpClientRequestOption> $parentOptions
+     * @param Loggable|null $logger
      * @throws SafetyCommonException
      */
-    protected function __construct(string $method, string $hostname, string $path, array $parentHeaders, array $parentOptions)
+    protected function __construct(string $method, string $hostname, string $path, array $parentHeaders, array $parentOptions, ?Loggable $logger = null)
     {
         parent::__construct($parentHeaders, $parentOptions);
 
         $this->method = $method;
         $this->hostname = $hostname;
         $this->path = $path;
+        $this->logger = $logger;
     }
 
 
@@ -121,6 +130,25 @@ abstract class MockHttpClientPendingRequest extends HttpClientPendingRequest
         // Create the mock request
         $builtUri = $pathUri->build();
         $request = MockRequest::simulate($builtUri->getQueries(), $posts, $postBody, $serverVars);
+
+        if ($this->logger !== null) {
+            $this->logger->debug('>>> Request method/URI: ' . Quote::square($request->getMethod()) . ' ' . $builtUri);
+
+            foreach ($this->headers as $headerKey => $headerValue) {
+                $this->logger->debug('>>> - Header ' . Quote::square($headerKey) . ' = ' . $headerValue);
+            }
+
+            if ($posts !== null && count($posts) > 0) {
+                $this->logger->debug('>>> Post request arguments:');
+                foreach ($posts as $postKey => $postValue) {
+                    $this->logger->debug('>>> - ' . Quote::square($postKey) . ' = ' . $postValue);
+                }
+            }
+
+            if (!Str::isNullOrEmpty($postBody)) {
+                $this->logger->debug('>>> Post body: ' . $postBody);
+            }
+        }
 
         return $this->onRunRequest($request, $scheme, $httpVersion);
     }
@@ -200,6 +228,19 @@ abstract class MockHttpClientPendingRequest extends HttpClientPendingRequest
         try {
             $response = $this->onRouteRequest($this->hostname, $request);
             $ret = $listener->createResponse($scheme, $httpVersion, $request, $response);
+
+            if ($this->logger !== null) {
+                $this->logger->debug('<<< HTTP response code: ' . $ret->getHttpStatusCode());
+
+                foreach ($ret->getHeaders()->all() as $headerKey => $headerValue) {
+                    $this->logger->debug('<<< - Header ' . Quote::square($headerKey) . ' = ' . $headerValue);
+                }
+
+                $body = $ret->getBody()->getData();
+                if (!Str::isNullOrEmpty($body)) {
+                    $this->logger->debug('<<< HTTP response body: ' . $body);
+                }
+            }
 
             $scoped->succeeded();
             return $ret;

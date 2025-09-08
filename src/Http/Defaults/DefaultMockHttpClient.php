@@ -19,6 +19,6 @@ class DefaultMockHttpClient extends MockHttpClient
      */
     protected function createPendingRequest(string $method, string $hostname, string $path) : MockHttpClientPendingRequest
     {
-        return new DefaultMockHttpClientPendingRequest($method, $hostname, $path, $this->headers, $this->options);
+        return new DefaultMockHttpClientPendingRequest($method, $hostname, $path, $this->headers, $this->options, $this->useLogger);
     }
 }

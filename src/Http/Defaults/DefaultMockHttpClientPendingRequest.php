@@ -4,6 +4,7 @@ namespace MagpieLib\TestBench\Http\Defaults;
 
 use Magpie\Exceptions\SafetyCommonException;
 use Magpie\Facades\Http\HttpClientRequestOption;
+use Magpie\Logs\Concepts\Loggable;
 use MagpieLib\TestBench\Http\MockHttpClientPendingRequest;
 use MagpieLib\TestBench\Http\MockHttpClientResponseListener;
 
@@ -19,11 +20,12 @@ class DefaultMockHttpClientPendingRequest extends MockHttpClientPendingRequest
      * @param string $path
      * @param array<string, mixed> $parentHeaders
      * @param array<HttpClientRequestOption> $parentOptions
+     * @param Loggable|null $logger
      * @throws SafetyCommonException
      */
-    public function __construct(string $method, string $hostname, string $path, array $parentHeaders, array $parentOptions)
+    public function __construct(string $method, string $hostname, string $path, array $parentHeaders, array $parentOptions, ?Loggable $logger)
     {
-        parent::__construct($method, $hostname, $path, $parentHeaders, $parentOptions);
+        parent::__construct($method, $hostname, $path, $parentHeaders, $parentOptions, $logger);
     }
 
 

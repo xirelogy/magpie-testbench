@@ -18,6 +18,10 @@ abstract class MockHttpClient extends HttpClient
      */
     public const TYPECLASS = 'mock';
     /**
+     * @var Loggable|null Logger instance to use
+     */
+    protected ?Loggable $useLogger = null;
+    /**
      * @var string|null The preferred hostname to be used, when not specified
      */
     protected ?string $useHostname = null;
@@ -37,7 +41,8 @@ abstract class MockHttpClient extends HttpClient
      */
     public function setLogger(Loggable $logger) : bool
     {
-        return false;
+        $this->useLogger = $logger;
+        return true;
     }
 
 
