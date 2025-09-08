@@ -4,7 +4,6 @@ namespace MagpieLib\TestBench\Testing;
 
 use DateTimeInterface;
 use Exception;
-use Magpie\Facades\Log;
 use Magpie\General\Contexts\Scoped;
 use Magpie\General\Contexts\ScopedCollection;
 use MagpieLib\TestBench\Http\Defaults\DefaultMockHttpClient;
