@@ -60,11 +60,12 @@ abstract class TestCase extends PhpUnitTestCase
 
     /**
      * Run in scope
-     * @param callable():void $fn
-     * @return void
+     * @param callable():T $fn
+     * @return T
+     * @template T
      * @throws Throwable
      */
-    protected final function runInScope(callable $fn) : void
+    protected final function runInScope(callable $fn) : mixed
     {
         // Flag
         $this->isRunInScope = true;
@@ -73,8 +74,9 @@ abstract class TestCase extends PhpUnitTestCase
         $scoped = new ScopedCollection($this->getScopedItems());
 
         try {
-            $fn();
+            $ret = $fn();
             $scoped->succeeded();
+            return $ret;
         } catch (Throwable $ex) {
             $scoped->crash($ex);
             throw $ex;
