@@ -7,8 +7,6 @@ use Magpie\General\Traits\StaticClass;
 use Magpie\Models\ColumnName;
 use Magpie\Models\Model;
 use Magpie\Models\Patches\ModelPatch;
-use MagpieLib\TestBench\Testing\Impls\ModelInitializerPatch;
-use MagpieLib\TestBench\Testing\Impls\ModelTimestampPatch;
 use MagpieLib\TestBench\Testing\Impls\TestModelPatch;
 
 /**
