@@ -3,15 +3,14 @@
 namespace MagpieLib\TestBench\Configurations\Prepares;
 
 use Magpie\General\DateTimes\Duration;
+use Magpie\General\Sugars\Excepts;
 use Magpie\Queues\Providers\QueueCreator;
-use Magpie\System\Kernel\EasyFiber;
 use Magpie\System\Kernel\EasyFiberPromise;
-use Magpie\System\Process\Process;
 use MagpieLib\TestBench\Configurations\Concepts\TestEnvironmentPreparable;
 use MagpieLib\TestBench\Configurations\Concepts\TestEnvironmentReleasable;
 use MagpieLib\TestBench\Configurations\Impls\QueueListenerRunner;
+use MagpieLib\TestBench\Configurations\Impls\QueueProcessHost;
 use MagpieLib\TestBench\Configurations\TestEnvironmentContext;
-use MagpieLib\TestBench\System\Adapters\Impls\PhpUnitConfig;
 
 /**
  * Listen and process queue event in a separate process in preparation for test
@@ -24,23 +23,35 @@ class QueueListenerHosted implements TestEnvironmentPreparable, TestEnvironmentR
     public const DEFAULT_TIMEOUT_SEC = 1;
 
     /**
-     * @var QueueListenerRunner Target runner
+     * @var string|null Queue name
      */
-    protected readonly QueueListenerRunner $runner;
+    protected readonly ?string $queueName;
     /**
-     * @var EasyFiberPromise|null The queue process
+     * @var Duration Queue timeout
      */
-    protected ?EasyFiberPromise $queueProcess;
+    protected Duration $timeout;
+    /**
+     * @var int Total processes to be created
+     */
+    protected readonly int $totalProcesses;
+    /**
+     * @var array<QueueProcessHost> All queue process hosts
+     */
+    protected array $queueProcessHosts;
 
 
     /**
      * Constructor
      * @param string|null $queueName
      * @param Duration $timeout
+     * @param int $totalProcesses
      */
-    protected function __construct(?string $queueName, Duration $timeout)
+    protected function __construct(?string $queueName, Duration $timeout, int $totalProcesses)
     {
-        $this->runner = new QueueListenerRunner($queueName, $timeout);
+        $this->queueName = $queueName;
+        $this->timeout = $timeout;
+        $this->queueProcessHosts = [];
+        $this->totalProcesses = $totalProcesses;
     }
 
 
@@ -51,20 +62,10 @@ class QueueListenerHosted implements TestEnvironmentPreparable, TestEnvironmentR
     {
         QueueCreator::instance()->initialize($context->getLogger());
 
-        $host = PhpUnitConfig::createHostedQueueRun($this->runner);
-
-        $runningProcess = $host->createProcess();
-
-        $this->queueProcess = EasyFiberPromise::create(function (TestEnvironmentContext $context, Process $runningProcess) : int {
-            $processAsync = $runningProcess->runAsync();
-            $context->getLogger()->info(_l('Started queue listener in separated process'));
-
-            foreach ($processAsync->getAnyOutputs() as $output) {
-                $context->getLogger()->debug($output->content);
-            }
-
-            return $processAsync->wait();
-        }, $context, $runningProcess);
+        for ($i = 0; $i < $this->totalProcesses; ++$i) {
+            $runner = new QueueListenerRunner($this->queueName, $this->timeout);
+            $this->queueProcessHosts[] = QueueProcessHost::createAndRun($context, $runner);
+        }
     }
 
 
@@ -73,28 +74,29 @@ class QueueListenerHosted implements TestEnvironmentPreparable, TestEnvironmentR
      */
     public function release(TestEnvironmentContext $context) : void
     {
-        if ($this->queueProcess === null) return;
+        if (count($this->queueProcessHosts) <= 0) return;
 
         EasyFiberPromise::createNonBlocking(function (TestEnvironmentContext $context) {
-            while (true) {
-                $context->getLogger()->warning(_l('Sending restart/terminate signal to queue...'));
+            $context->getLogger()->warning(_l('Sending restart/terminate signal to queue(s)...'));
 
-                QueueCreator::instance()
-                    ->getQueue($this->runner->queueName)
-                    ->signalWorkerRestart();
-
-                EasyFiber::sleep(1);
-            }
+            QueueCreator::instance()
+                ->getQueue($this->queueName)
+                ->signalWorkerRestart();
         }, $context);
 
-        EasyFiberPromise::create(function (TestEnvironmentContext $context) {
-            $processReturn = $this->queueProcess->wait();
+        // Get promises
+        $promises = [];
+        foreach ($this->queueProcessHosts as $queueProcessHost) {
+            $promise = $queueProcessHost->release($context);
+            if ($promise !== null) $promises[] = $promise;
+        }
 
-            $context->getLogger()->info(_format_l(
-                'Queue listener process exit',
-                'Queue listener process exit with code: {{0}}', $processReturn,
-            ));
-        }, $context);
+        // And wait
+        foreach ($promises as $promise) {
+            Excepts::noThrow(function () use ($promise) {
+                $promise->wait();
+            });
+        }
     }
 
 
@@ -102,10 +104,11 @@ class QueueListenerHosted implements TestEnvironmentPreparable, TestEnvironmentR
      * Create an instance
      * @param string|null $queueName
      * @param Duration|null $timeout
+     * @param int $totalProcesses
      * @return static
      */
-    public static function create(?string $queueName = null, ?Duration $timeout = null) : static
+    public static function create(?string $queueName = null, ?Duration $timeout = null, int $totalProcesses = 1) : static
     {
-        return new static($queueName, $timeout ?? Duration::inSeconds(static::DEFAULT_TIMEOUT_SEC));
+        return new static($queueName, $timeout ?? Duration::inSeconds(static::DEFAULT_TIMEOUT_SEC), $totalProcesses);
     }
 }

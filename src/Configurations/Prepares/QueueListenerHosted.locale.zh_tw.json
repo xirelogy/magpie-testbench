@@ -1,7 +1,4 @@
 {
-  "Started queue listener in separated process": "已在另一個程序中啟動佇列監聽器",
-  "Sending restart/terminate signal to queue...": "正在向佇列傳送重啟/終止訊號",
-  "Queue listener process exit": "佇列監聽器程序已退出",
-  "Queue listener process exit with code: {{0}}": "佇列監聽器程序已退出，程式碼：{{0}}",
+  "Sending restart/terminate signal to queue(s)...": "正在向佇列傳送重啟/終止訊號",
   "": ""
 }

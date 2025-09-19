@@ -1,0 +1,7 @@
+{
+  "Started queue listener in separated process": "已在另一個程序中啟動佇列監聽器",
+  "Started queue listener in separated process {{0}}": "已在另一個程序中{{0}}啟動佇列監聽器",
+  "Queue listener process exit": "佇列監聽器程序已退出",
+  "Queue listener process {{0}} exit with code: {{1}}": "佇列監聽器程序{{0}}已退出，程式碼：{{1}}",
+  "": ""
+}
