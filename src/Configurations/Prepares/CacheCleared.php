@@ -21,10 +21,10 @@ class CacheCleared implements TestEnvironmentPreparable
     {
         $logger = $context->getLogger();
 
-        $logger->info('Clearing cache...');
+        $logger->info(_l('Clearing cache...'));
         $provider = CacheProvider::getDefaultProvider();
         $provider->clear();
 
-        $logger->info('Cache cleared');
+        $logger->info(_l('Cache cleared'));
     }
 }
