@@ -72,10 +72,6 @@ final class QueueListenerRunner extends BaseTestQueueRunnable
             Log::info('Queue restart signal received');
         }));
 
-        /*$receiver = ClosureEventTemporaryReceiver::create(function (Eventable $event) {
-            Log::info('Received event: ' . $event::class);
-        });//*/
-
         $queueReceiver = ClosureEventTemporaryReceiver::create(function (Eventable $event) : void {
             if (!$event instanceof QueuedItemEvent) return;
 
