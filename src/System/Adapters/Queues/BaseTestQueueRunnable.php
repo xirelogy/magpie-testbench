@@ -22,6 +22,10 @@ abstract class BaseTestQueueRunnable extends BaseQueueRunnable
      * @var TestEnvironmentExported|null The exported test environment host
      */
     private readonly ?TestEnvironmentExported $testEnv;
+    /**
+     * @var string|int|null Current identity
+     */
+    private string|int|null $ident;
 
 
     /**
@@ -30,6 +34,17 @@ abstract class BaseTestQueueRunnable extends BaseQueueRunnable
     protected function __construct()
     {
         $this->testEnv = TestEnvironmentHost::instance()?->export();
+        $this->ident = null;
+    }
+
+
+    /**
+     * Corresponding identity, if running
+     * @return string|int|null
+     */
+    public function getIdent() : string|int|null
+    {
+        return $this->ident;
     }
 
 
@@ -38,17 +53,21 @@ abstract class BaseTestQueueRunnable extends BaseQueueRunnable
      */
     protected final function onRun() : void
     {
-        // Reinitialize the test environment
-        if ($this->testEnv !== null) {
-            TestEnvironmentHost::reinitialize($this->testEnv);
+        try {
+            // Reinitialize the test environment
+            if ($this->testEnv !== null) {
+                TestEnvironmentHost::reinitialize($this->testEnv);
+            }
+
+            // Setup logging
+            $relay = $this->createDefaultLogRelay();
+            $logger = new DefaultLogger($relay);
+            Kernel::current()->setLogger($logger);
+
+            $this->onRunInTest();
+        } finally {
+            $this->ident = null;
         }
-
-        // Setup logging
-        $relay = $this->createDefaultLogRelay();
-        $logger = new DefaultLogger($relay);
-        Kernel::current()->setLogger($logger);
-
-        $this->onRunInTest();
     }
 
 
@@ -60,6 +79,7 @@ abstract class BaseTestQueueRunnable extends BaseQueueRunnable
     {
         $ident = @getmypid();
         if ($ident === false) $ident = Random::string(8, RandomCharset::LOWER_ALPHANUM);
+        $this->ident = $ident;
 
         $filename = $this->createDefaultLoggerFilename($ident);
         return new SpecificFileLogRelay($filename, Kernel::current()->getConfig()->createDefaultLogConfig());
